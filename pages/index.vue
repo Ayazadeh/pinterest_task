@@ -9,12 +9,12 @@
         placeholder="Search images..."
       />
     </div>
+    <ImageGrid v-if="pins.length" :pins="pins" />
     <div v-if="loading" class="text-center my-4">
       <div class="spinner-border" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
     </div>
-    <ImageGrid v-if="pins.length" :pins="pins" />
     <div v-if="error" class="alert alert-danger" role="alert">
       {{ error }}
     </div>
@@ -59,7 +59,7 @@ const loadMore = async () => {
     try {
 
       await searchStore.loadMoreImages();
-      
+
       pins.value = searchStore.pins;
 
     } catch (err) {

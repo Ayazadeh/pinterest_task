@@ -1,5 +1,5 @@
 <template>
-  <div class="image-grid">
+  <section class="image-grid">
     <div v-for="pin in pins" :key="pin.id" class="pin">
       <img
         :src="selectImageUrl(pin)"
@@ -7,8 +7,12 @@
         loading="lazy"
         class="pin-image"
       />
+      <div class="pin-content">
+        <h3 class="pin-title">{{ pin.title }}</h3>
+        <p class="pin-description">{{ pin.description }}</p>
+      </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -55,12 +59,47 @@ const selectImageUrl = (pin: Pin) => {
 .pin {
   break-inside: avoid;
   margin-bottom: 1rem;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+  }
 }
 
 .pin-image {
   width: 100%;
   height: auto;
-  border-radius: 8px;
-  object-fit: cover;
+  display: block;
+}
+
+.pin-content {
+  padding: 0.75rem;
+}
+
+.pin-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+  color: #111;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pin-description {
+  font-size: 0.875rem;
+  color: #666;
+  margin: 0;
+  display: -webkit-box;
+  line-clamp: 3;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 </style>
