@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, onBeforeUnmount } from "vue";
+import { ref, onMounted, computed, onBeforeUnmount } from "vue";
 import { useSearchStore } from "~/stores/search";
 import ImageGrid from "~/components/ImageGrid.vue";
 
@@ -39,7 +39,7 @@ const searchStore = useSearchStore();
 
 // State
 const searchQuery = ref(searchStore.query);
-const pins = ref(searchStore.pins);
+const pins = computed(() => searchStore.pins);
 const loading = ref(false);
 const error = ref<string | null>(null);
 const sentinel = ref(null);
@@ -49,7 +49,6 @@ const observer = ref<any>(null);
 const handlePopState = () => {
 	if (searchStore.goBack()) {
 		searchQuery.value = searchStore.query;
-		pins.value = searchStore.pins;
 		window.scrollTo(0, searchStore.scrollPosition);
 	}
 };
@@ -62,7 +61,6 @@ const performSearch = async () => {
 		// Add to browser history
 		window.history.pushState({}, "", `?q=${encodeURIComponent(searchQuery.value)}`);
 		await searchStore.searchImages(searchQuery.value);
-		pins.value = searchStore.pins;
 	} catch (err) {
 		error.value = "Failed to fetch images. Please try again.";
 	} finally {
@@ -78,7 +76,6 @@ const loadMore = async () => {
 		try {
 			await searchStore.loadMoreImages();
 
-			pins.value = searchStore.pins;
 		} catch (err) {
 			error.value = "Failed to load more images.";
 		} finally {
@@ -87,9 +84,14 @@ const loadMore = async () => {
 	}
 };
 
+const handleScroll = () => {
+  searchStore.saveScrollPosition(window.scrollY);
+}
+
 // Lifecycle
 onMounted(() => {
 	window.addEventListener("popstate", handlePopState);
+  window.addEventListener("scroll", handleScroll);
 
 	observer.value = new IntersectionObserver(
 		(entries) => {
@@ -107,23 +109,15 @@ onMounted(() => {
 	// Restore state on mount (back navigation)
 	if (searchStore.query) {
 		searchQuery.value = searchStore.query;
-		pins.value = searchStore.pins;
 		window.scrollTo(0, searchStore.scrollPosition);
 	}
 });
 
 onBeforeUnmount(() => {
-	window.removeEventListener("popstate", handlePopState);
-	searchStore.saveScrollPosition(window.scrollY);
+  window.removeEventListener("popstate", handlePopState);
+  window.removeEventListener("scroll", handleScroll);
 });
 
-// Watchers
-watch(
-	() => searchStore.pins,
-	(newPins) => {
-		pins.value = newPins;
-	}
-);
 </script>
 
 <style lang="scss" scoped>

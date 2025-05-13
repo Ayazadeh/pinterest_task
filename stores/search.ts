@@ -17,18 +17,9 @@ export const useSearchStore = defineStore('search', () => {
     const currentHistoryIndex = ref(-1)
  
     const searchImages = async (q: string) => {
-      // Save current state to history before new search
-      if (query.value) {
-        searchHistory.value = searchHistory.value.slice(0, currentHistoryIndex.value + 1);
-        searchHistory.value.push({
-          query: query.value,
-          pins: [...pins.value],
-          bookmark: bookmark.value,
-          scrollPosition: scrollPosition.value
-        });
-        currentHistoryIndex.value = searchHistory.value.length - 1;
-      }
-
+      // Reset history index for new search
+      currentHistoryIndex.value = -1;
+      
       query.value = q;
       pins.value = [];
       bookmark.value = null;
@@ -47,6 +38,15 @@ export const useSearchStore = defineStore('search', () => {
 
         pins.value = response.pins;
         bookmark.value = response.bookmark || null;
+
+        // Save state to history
+        searchHistory.value.push({
+          query: query.value,
+          pins: [...pins.value],
+          bookmark: bookmark.value,
+          scrollPosition: scrollPosition.value
+        });
+        currentHistoryIndex.value = searchHistory.value.length - 1;
 
       } catch (error) {
         throw new Error('API request failed');
@@ -69,6 +69,7 @@ export const useSearchStore = defineStore('search', () => {
         });
         pins.value = [...pins.value, ...response.pins];
         bookmark.value = response.bookmark || null;
+        searchHistory.value[currentHistoryIndex.value].pins = [...pins.value];
       } catch (error) {
         throw new Error('API request failed');
       }
@@ -83,7 +84,7 @@ export const useSearchStore = defineStore('search', () => {
     }
 
     const goBack = () => {
-      if (currentHistoryIndex.value > 0) {
+      if (currentHistoryIndex.value >= 0) {
         currentHistoryIndex.value--;
         const previousState = searchHistory.value[currentHistoryIndex.value];
         query.value = previousState.query;
