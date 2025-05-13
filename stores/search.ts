@@ -37,7 +37,7 @@ export const useSearchStore = defineStore('search', () => {
         const response: { pins: Pin[], bookmark: string | null } = await $fetch('/api', {
           params: {
             q: query.value,
-            limit: 10 
+            limit: 20 
           },
           headers: {
             'Accept': 'application/json',
@@ -60,7 +60,7 @@ export const useSearchStore = defineStore('search', () => {
           params: {
             q: query.value,
             bookmark: bookmark.value,
-            limit: 10,
+            limit: 20,
           },
           headers: {
             'Accept': 'application/json',

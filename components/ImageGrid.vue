@@ -54,6 +54,10 @@ const selectImageUrl = (pin: Pin) => {
   @media (min-width: 992px) {
     column-count: 4;
   }
+
+  @media (min-width: 1200px) {
+    column-count: 6;
+  }
 }
 
 .pin {
