@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, onBeforeUnmount } from 'vue';
 import { useSearchStore } from '~/stores/search';
 import ImageGrid from '~/components/ImageGrid.vue';
 
@@ -34,16 +34,55 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 const sentinel = ref(null);
 
+// Handle browser back button
+onMounted(() => {
+  window.addEventListener('popstate', handlePopState);
+  
+  observer.value = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) {
+        loadMore();
+      }
+    },
+    { threshold: 0.1 }
+  );
+
+  if (sentinel.value) {
+    observer.value.observe(sentinel.value);
+  }
+
+  // Restore state on mount (back navigation)
+  if (searchStore.query) {
+    searchQuery.value = searchStore.query;
+    pins.value = searchStore.pins;
+    window.scrollTo(0, searchStore.scrollPosition);
+  }
+});
+
+// Handle browser back button
+const handlePopState = () => {
+  if (searchStore.goBack()) {
+    searchQuery.value = searchStore.query;
+    pins.value = searchStore.pins;
+    window.scrollTo(0, searchStore.scrollPosition);
+  }
+};
+
+// Save scroll position before leaving
+onBeforeUnmount(() => {
+  window.removeEventListener('popstate', handlePopState);
+  searchStore.saveScrollPosition(window.scrollY);
+});
+
 const performSearch = async () => {
   loading.value = true;
   error.value = null;
 
   try {
-
+    // Add to browser history
+    window.history.pushState({}, '', `?q=${encodeURIComponent(searchQuery.value)}`);
     await searchStore.searchImages(searchQuery.value);
-
     pins.value = searchStore.pins;
-
   } catch (err) {
     error.value = 'Failed to fetch images. Please try again.';
   } finally {
@@ -72,32 +111,6 @@ const loadMore = async () => {
 
 // Infinite scroll
 const observer = ref<any>(null);
-onMounted(() => {
-  observer.value = new IntersectionObserver(
-    (entries) => {
-      if (entries[0].isIntersecting) {
-        loadMore();
-      }
-    },
-    { threshold: 0.1 }
-  );
-
-  if (sentinel.value) {
-    observer.value.observe(sentinel.value);
-  }
-
-  // Restore state on mount (back navigation)
-  if (searchStore.query) {
-    searchQuery.value = searchStore.query;
-    pins.value = searchStore.pins;
-    window.scrollTo(0, searchStore.scrollPosition);
-  }
-});
-
-// Save scroll position before leaving
-onBeforeUnmount(() => {
-  searchStore.saveScrollPosition(window.scrollY);
-});
 
 // Watch for store changes
 watch(
