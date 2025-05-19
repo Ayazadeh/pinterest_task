@@ -8,6 +8,15 @@ export default defineNuxtConfig({
   css: [
     '~/assets/scss/main.scss'
   ],
+  vite: {
+    css: {
+      preprocessorOptions: {
+        scss: {
+          quietDeps: true
+        }
+      }
+    }
+  },
   nitro: {
     devProxy: {
       '/api': {
@@ -16,5 +25,5 @@ export default defineNuxtConfig({
         prependPath: false,
       }
     }
-  }
+  } 
 })
